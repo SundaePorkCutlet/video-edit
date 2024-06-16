@@ -1,0 +1,20 @@
+config:
+
+  db:
+    host: localhost
+    port: 3306
+    user: root
+    password: 1111
+    database: "stockfolio_test"
+    driver: "mysql"
+  
+  log:
+    level: "debug"
+    output: "console"
+    file-path: "./"
+
+  file:
+    video-path: "/Users/hongjunho/Downloads/workspace/stockfolio-test/cmd/app/stockFoilo/videos"
+    concat-path: "/Users/hongjunho/Downloads/workspace/stockfolio-test/cmd/app/stockFoilo/concat"
+
+  http-port: "9000"
