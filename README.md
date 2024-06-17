@@ -64,7 +64,7 @@ endTime : 종료 시간 (초 단위)
     ]
 }</code></pre>  
 
-  isConcated : true로 요청
+  isConcated : true로 요청  
   concatVideoList : 요청할 동영상 고유 id 리스트  
 
 ### 3. trim한 동영상들을 concat 요청하는 경우  
