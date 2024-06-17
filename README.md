@@ -22,12 +22,20 @@
     "code": 6002
 }</code></pre>
 
+# Script
+### `make run`  
+9000번 포트로 프로젝트를 실행시킵니다.  
+localhost:9000으로 기본 설정이 되어있습니다.  
+app_config.yaml 파일에서 포트와 주소를 설정 할 수 있습니다.
+
+
 
 # API Example
 ### POST
 ### `/upload`  
 동영상 업로드  
 Multipart form 형식으로 업로드  
+app_config.yaml에 설정해놓은 위치로 저장시킵니다.  
 
 **postman example**
   
@@ -60,6 +68,8 @@ videoId : 요청할 동영상 고유 id
 startTime : 시작 시간 (초 단위)  
 endTime : 종료 시간 (초 단위)  
 
+DB trim_history테이블에 생성된 동영상 uuid와 원본 동영상 uuid , startTime, endTime이 저장됩니다.
+
 ### 2. concat만 요청하는 경우
 <pre><code>{
     "isConcated":true,
@@ -70,6 +80,9 @@ endTime : 종료 시간 (초 단위)
 
   isConcated : true로 요청  
   concatVideoList : 요청할 동영상 고유 id 리스트  
+
+app_config.yaml에 설정해놓은 곳에 원본 동영상 path 리스트가 담긴 txt파일이 생성됩니다.  
+DB concat_history테이블에 생성된 동영상 uuid와 encoding된 동영상 uuid 리스트 txt파일 path가 저장됩니다.  
 
 ### 3. trim한 동영상들을 concat 요청하는 경우  
 <pre><code>{
@@ -91,10 +104,16 @@ endTime : 종료 시간 (초 단위)
 
 trim과 똑같은 요청에서 isConcated만 true요청 추가  
 
+DB trim_history테이블에 생성된 동영상 uuid와 원본 동영상 uuid , startTime, endTime이 저장됩니다.  
+DB encode_history테이블에 encoding된 동영상 uuid와 trim된 원본 동영상 uuid가 저장됩니다.  
+DB concat_history테이블에 생성된 동영상 uuid와 encoding된 동영상 uuid 리스트 txt파일 path가 저장됩니다.  
+  
 ### GET
 ### `/video`  
 비디오 관한 모든 정보요청  
 
+
+#### result example
 <pre><code>[
     {
         "video": {
@@ -121,3 +140,11 @@ trim과 똑같은 요청에서 isConcated만 true요청 추가
     },
 ]</code></pre>
 
+## ISSUE
+동영상을 concat 하기 위해서는 해상도,확장자,코덱을 통일시켜야 했음  
+그래서 concat하기전 동영상들을 모두 encoding 시킴  
+그래서 trim한 동영상을 concat을 요청을 해버리면 동영상수가 엄청 늘어나는 이슈가 있음  
+ex) 3개의 동영상을 trim시킨다음에 concat을 요청함  
+1. 3개의 동영상을 trim시킨다음 trim된 동영상들을 저장함 -> 동영상 3개증가, trim_history에 trim된 동영상 uuid와 원본 동영상 uuid를 저장  
+2. trim된 3개의 동영상을 concat시키기위해서 encoding시킴 -> 동영상 3개 또 증가, encode_history에 encoding된 동영상 uuid와 trim된 동영상 uuid를 저장  
+3. encoding된 동영상 3개를 concat 시킴 -> 동영상 1개 증가, concat txt파일을 생성해서 encoding된 동영상 리스트를 생성, concat_history테이블에 concat된 동영상 uuid와 txt파일 path를 저장  
