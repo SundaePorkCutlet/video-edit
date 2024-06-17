@@ -93,5 +93,31 @@ trim과 똑같은 요청에서 isConcated만 true요청 추가
 
 ### GET
 ### `/video`  
-비디오 관한 모든 정보요청
+비디오 관한 모든 정보요청  
+
+<pre><code>[
+    {
+        "video": {
+            "id": "105251f7-7516-42fc-80fd-86f0f0ba5368",
+            "path": "/Users/hongjunho/Downloads/workspace/stockfolio-test/file/videos/105251f7-7516-42fc-80fd-86f0f0ba5368.mp4",
+            "videoName": "trim_KakaoTalk_Video_2024-06-14-20-28-32.mp4",
+            "extension": "mp4",
+            "uploadTime": "",
+            "isTrimed": true,
+            "trimTime": "20240617212941",
+            "isConcated": false,
+            "concatTime": "",
+            "isEncoded": false,
+            "encodeTime": ""
+        },
+        "trimInfo": {
+            "videoId": "7d04454e-5fd9-48b8-a8bd-ebdabd7e3362",
+            "videoPath": "/Users/hongjunho/Downloads/workspace/stockfolio-test/file/videos/7d04454e-5fd9-48b8-a8bd-ebdabd7e3362.mp4",
+            "startTime": 2,
+            "endTime": 5
+        },
+        "concatInfoPath": "",
+        "encodeInfoPath": ""
+    },
+]</code></pre>
 
