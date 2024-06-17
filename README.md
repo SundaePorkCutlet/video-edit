@@ -7,7 +7,7 @@
 **500** : 서버 오류  
 
 **1001** : Trim 성공  
-**1002** : Concat 성공
+**1002** : Concat 성공  
 **1003** : Trim 성공 Concat 실패  
 **1004** : Concat 성공 Trim 실패  
 **1005** : Trim Concat 성공  
