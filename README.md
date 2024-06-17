@@ -67,4 +67,22 @@ endTime : 종료 시간 (초 단위)
   isConcated : true로 요청
   concatVideoList : 요청할 동영상 고유 id 리스트  
 
-### 3. trim한 동영상들을 concat 요청하는 경우
+### 3. trim한 동영상들을 concat 요청하는 경우  
+<pre><code>{
+    "isTrimed":true,
+    "trimVideoList":[
+         {
+        "videoId":"7d04454e-5fd9-48b8-a8bd-ebdabd7e3362",
+        "startTime":2,
+        "endTime":5
+        },
+        {
+        "videoId":"83158ed9-5ff4-46b2-aed9-63064196b505",
+        "startTime":1,
+        "endTime":7
+        }
+    ],
+    "isConcated":true
+}</code></pre>  
+
+trim과 똑같은 요청에서 isConcated만 true요청 추가
