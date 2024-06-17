@@ -14,7 +14,7 @@ config:
     file-path: "./"
 
   file:
-    video-path: "/Users/hongjunho/Downloads/workspace/stockfolio-test/cmd/app/stockFoilo/videos"
-    concat-path: "/Users/hongjunho/Downloads/workspace/stockfolio-test/cmd/app/stockFoilo/concat"
+    video-path: "/Users/hongjunho/Downloads/workspace/stockfolio-test/file/videos"
+    concat-path: "/Users/hongjunho/Downloads/workspace/stockfolio-test/file/concat"
 
   http-port: "9000"

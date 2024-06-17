@@ -1,6 +1,7 @@
 package controller
 
 import (
+	"context"
 	"fmt"
 	"mime/multipart"
 	"net/http"
@@ -22,6 +23,8 @@ import (
 
 func UploadVideo(c *gin.Context) {
 
+	ctx := c.Request.Context()
+
 	var videos []model.Video
 
 	form, err := c.MultipartForm()
@@ -35,6 +38,7 @@ func UploadVideo(c *gin.Context) {
 	files := form.File["files"]
 
 	var wg sync.WaitGroup
+	var mu sync.Mutex
 	results := make(chan error, len(files))
 
 	for _, file := range files {
@@ -61,8 +65,9 @@ func UploadVideo(c *gin.Context) {
 				UploadTime: utils.GetTime(),
 				Path:       filePath,
 			}
-
+			mu.Lock()
 			videos = append(videos, video)
+			mu.Unlock()
 
 			if err := c.SaveUploadedFile(file, filePath); err != nil {
 				log.Error().Msgf("upload file error: %s", err.Error())
@@ -85,7 +90,7 @@ func UploadVideo(c *gin.Context) {
 		}
 	}
 
-	err = service.UploadVideo(videos)
+	err = service.UploadVideo(ctx, videos)
 	if err != nil {
 		removeVideo(c, videos)
 		ResponseFailure(c, http.StatusInternalServerError)
@@ -105,36 +110,36 @@ func ModifyVideo(c *gin.Context) {
 
 	// 유저가 trim만 요청한 경우
 	if Request.IsTrimed && !Request.IsConcated {
-		err, errorCode, _ := trimVideo(c, Request.TrimVideoList)
+		_, err := trimVideo(c, Request.TrimVideoList)
 		if err != nil {
-			ResponseFailure(c, errorCode)
+			ResponseFailure(c, consts.TrimFail)
 			return
 		}
 	}
 	// 유저가 concat만 요청한 경우
 	if Request.IsConcated && !Request.IsTrimed {
-		errorCode, err := concatVideo(c, Request.ConcatVideoIdList)
+		err := concatVideo(c, Request.ConcatVideoIdList)
 		if err != nil {
-			ResponseFailure(c, errorCode)
+			ResponseFailure(c, consts.ConcatFail)
 			return
 		}
 	}
 
 	// 유저가 trim, concat 둘다 요청한 경우
 	if Request.IsTrimed && Request.IsConcated {
-		trimmedVideoList, errorCode, err := trimVideo(c, Request.TrimVideoList)
+		trimmedHistoryList, err := trimVideo(c, Request.TrimVideoList)
 		if err != nil {
-			ResponseFailure(c, errorCode)
+			ResponseFailure(c, consts.TrimFail)
 			return
 		}
 		concatVideoIdList := []string{}
-		for _, video := range trimmedVideoList {
-			concatVideoIdList = append(concatVideoIdList, video.Id)
+		for _, trimHistory := range trimmedHistoryList {
+			concatVideoIdList = append(concatVideoIdList, trimHistory.Video.Id)
 		}
 
-		_, err = concatVideo(c, concatVideoIdList)
+		err = concatVideo(c, concatVideoIdList)
 		if err != nil {
-			ResponseFailure(c, consts.SuccessTrimFailConcat)
+			ResponseFailure(c, consts.TrimSuccessConcatFail)
 			return
 		}
 	}
@@ -174,68 +179,33 @@ func removeVideo(c *gin.Context, videos []model.Video) {
 	}
 }
 
-func trimVideo(c *gin.Context, trimVideoList []model.TrimVideo) ([]model.Video, int, error) {
-	var videos []model.Video
+func trimVideo(ctx context.Context, trimVideoList []model.TrimVideo) ([]model.TrimHistory, error) {
 
-	var wg sync.WaitGroup
-	results := make(chan model.OperationError, len(trimVideoList))
-
-	for _, trimVideo := range trimVideoList {
-		wg.Add(1)
-
-		go func(trimVideo model.TrimVideo) {
-			defer wg.Done()
-			video, err := service.GetVideoWithVideoId(trimVideo.VideoId)
-			if err != nil {
-				results <- model.OperationError{Error: err, ErrorCode: http.StatusBadRequest}
-				return
-			}
-
-			// trim time 체크
-			if trimVideo.StartTime < 0 || trimVideo.EndTime < 0 {
-				results <- model.OperationError{Error: fmt.Errorf("invalid trim time"), ErrorCode: http.StatusBadRequest}
-				return
-			}
-
-			trimedVideo, err := service.TrimVideo(video, trimVideo.StartTime, trimVideo.EndTime)
-			if err != nil {
-				results <- model.OperationError{Error: err, ErrorCode: http.StatusInternalServerError}
-				return
-			}
-			videos = append(videos, trimedVideo)
-
-			results <- model.OperationError{Error: nil, ErrorCode: 0}
-		}(trimVideo)
+	trimHistory, err := service.TrimVideo(ctx, trimVideoList)
+	if err != nil {
+		return trimHistory, err
 	}
 
-	wg.Wait()
-	close(results)
-	// 결과를 확인하여 오류가 발생하면 처리
-	for result := range results {
-		log.Debug().Msgf("VIDOE: %v", videos)
-		removeVideo(c, videos)
-		return nil, result.ErrorCode, result.Error
-
-	}
-
-	return videos, 0, nil
+	return trimHistory, nil
 }
 
-func concatVideo(c *gin.Context, concatVideoIdList []string) (int, error) {
+func concatVideo(c *gin.Context, concatVideoIdList []string) error {
+	ctx := c.Request.Context()
+
 	var videos []model.Video
 
 	for _, concatVideoId := range concatVideoIdList {
 		video, err := service.GetVideoWithVideoId(concatVideoId)
 		if err != nil {
-			return http.StatusBadRequest, err
+			return err
 		}
 		videos = append(videos, video)
 	}
 
-	err := service.ConcatVideo(videos, concatVideoIdList)
+	err := service.ConcatVideo(ctx, videos, concatVideoIdList)
 	if err != nil {
-		return http.StatusInternalServerError, err
+		return err
 	}
 
-	return 0, nil
+	return nil
 }

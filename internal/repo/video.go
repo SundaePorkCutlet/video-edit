@@ -1,13 +1,15 @@
 package repo
 
 import (
+	"context"
+	"database/sql"
 	"stockfoilo_test/internal/db"
 	"stockfoilo_test/internal/model"
 
 	"github.com/rs/zerolog/log"
 )
 
-func InsertVideo(dbCtx *db.DbCtx, video model.Video) error {
+func InsertVideo(tx *sql.Tx, ctx context.Context, video model.Video) error {
 	query := `
 		INSERT INTO video 
 		(
@@ -19,10 +21,14 @@ func InsertVideo(dbCtx *db.DbCtx, video model.Video) error {
 			is_trimed,
 			trim_time,
 			is_concated,
-			concat_time
+			concat_time,
+			is_encoded,
+			encode_time
 		)
 		VALUES
 		(
+			?,
+			?,
 			?,
 			?,
 			?,
@@ -35,14 +41,7 @@ func InsertVideo(dbCtx *db.DbCtx, video model.Video) error {
 		)
 		`
 
-	stmt, err := dbCtx.CreatePrepareStmt(query)
-	if err != nil {
-		log.Error().Msgf("failed to create prepare statement: %s", err.Error())
-		return err
-	}
-
-	_, err = stmt.ExecContext(
-		dbCtx.Ctx,
+	_, err := tx.ExecContext(ctx, query,
 		video.Id,
 		video.Path,
 		video.VideoName,
@@ -52,6 +51,8 @@ func InsertVideo(dbCtx *db.DbCtx, video model.Video) error {
 		video.TrimTime,
 		video.IsConcated,
 		video.ConcatTime,
+		video.IsEncoded,
+		video.EncodeTime,
 	)
 
 	if err != nil {
@@ -69,7 +70,6 @@ func FetchVideoWithVideoId(dbCtx *db.DbCtx, videoId string) (model.Video, error)
 			path,
 			video_name, 
 			extension, 
-			size,
 			upload_time,
 			is_trimed,
 			trim_time,
@@ -93,7 +93,6 @@ func FetchVideoWithVideoId(dbCtx *db.DbCtx, videoId string) (model.Video, error)
 		&video.Path,
 		&video.VideoName,
 		&video.Extension,
-		&video.Size,
 		&video.UploadTime,
 		&video.IsTrimed,
 		&video.TrimTime,
@@ -102,13 +101,14 @@ func FetchVideoWithVideoId(dbCtx *db.DbCtx, videoId string) (model.Video, error)
 	)
 
 	if err != nil {
+		log.Error().Msgf("failed to query row: %s", err.Error())
 		return model.Video{}, err
 	}
 
 	return video, nil
 }
 
-func InsertTrimHistory(dbCtx *db.DbCtx, originVideoId string, trimVideo model.TrimVideo) error {
+func InsertTrimHistory(tx *sql.Tx, ctx context.Context, originVideoId string, trimVideo model.TrimVideo) error {
 	query := `
 		INSERT INTO trim_history 
 		(
@@ -126,14 +126,9 @@ func InsertTrimHistory(dbCtx *db.DbCtx, originVideoId string, trimVideo model.Tr
 		)
 		`
 
-	stmt, err := dbCtx.CreatePrepareStmt(query)
-	if err != nil {
-		log.Error().Msgf("failed to create prepare statement: %s", err.Error())
-		return err
-	}
-
-	_, err = stmt.ExecContext(
-		dbCtx.Ctx,
+	_, err := tx.ExecContext(
+		ctx,
+		query,
 		trimVideo.VideoId,
 		originVideoId,
 		trimVideo.StartTime,
@@ -148,7 +143,7 @@ func InsertTrimHistory(dbCtx *db.DbCtx, originVideoId string, trimVideo model.Tr
 	return nil
 }
 
-func InsertConcatHistory(dbCtx *db.DbCtx, concatVideoId string, concatFilePath string) error {
+func InsertConcatHistory(tx *sql.Tx, ctx context.Context, concatVideoId string, concatFilePath string) error {
 	query := `
 		INSERT INTO concat_history 
 		(
@@ -162,14 +157,9 @@ func InsertConcatHistory(dbCtx *db.DbCtx, concatVideoId string, concatFilePath s
 		)
 		`
 
-	stmt, err := dbCtx.CreatePrepareStmt(query)
-	if err != nil {
-		log.Error().Msgf("failed to create prepare statement: %s", err.Error())
-		return err
-	}
-
-	_, err = stmt.ExecContext(
-		dbCtx.Ctx,
+	_, err := tx.ExecContext(
+		ctx,
+		query,
 		concatVideoId,
 		concatFilePath,
 	)
@@ -196,6 +186,7 @@ func DeleteVideo(dbCtx *db.DbCtx, videoId string) error {
 
 	_, err = stmt.ExecContext(dbCtx.Ctx, videoId)
 	if err != nil {
+		log.Error().Msgf("failed to delete video: %s", err.Error())
 		return err
 	}
 
@@ -209,7 +200,6 @@ func FetchVideoInfoList(dbCtx *db.DbCtx) ([]model.Video, error) {
 			path,
 			video_name, 
 			extension, 
-			size,
 			upload_time,
 			is_trimed,
 			trim_time,
@@ -242,7 +232,6 @@ func FetchVideoInfoList(dbCtx *db.DbCtx) ([]model.Video, error) {
 			&video.Path,
 			&video.VideoName,
 			&video.Extension,
-			&video.Size,
 			&video.UploadTime,
 			&video.IsTrimed,
 			&video.TrimTime,

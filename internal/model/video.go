@@ -5,12 +5,13 @@ type Video struct {
 	Path       string `json:"path"`
 	VideoName  string `json:"videoName"`
 	Extension  string `json:"extension"`
-	Size       int    `json:"size"`
 	UploadTime string `json:"uploadTime"`
 	IsTrimed   bool   `json:"isTrimed"`
 	TrimTime   string `json:"trimTime"`
 	IsConcated bool   `json:"isConcated"`
 	ConcatTime string `json:"concatTime"`
+	IsEncoded  bool   `json:"isEncoded"`
+	EncodeTime string `json:"encodeTime"`
 }
 
 type ModifyVideo struct {
@@ -24,4 +25,9 @@ type TrimVideo struct {
 	VideoId   string `json:"videoId"`
 	StartTime int    `json:"startTime"`
 	EndTime   int    `json:"endTime"`
+}
+
+type TrimHistory struct {
+	Video    Video     `json:"videoList"`
+	TrimInfo TrimVideo `json:"trimInfo"`
 }
