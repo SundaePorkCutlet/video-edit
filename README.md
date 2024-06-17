@@ -16,9 +16,11 @@
 **6002** : Trim 실패  
 **6003** : Concat 실패    
 
-**postman example**  
+**example**  
   
-<img width="522" alt="image" src="https://github.com/SundaePorkCutlet/video-edit/assets/87690981/67dc081d-8db1-44d4-9f08-89372d8ee177">
+<pre><code>{
+    "code": 6002
+}</code></pre>
 
 
 # API Example
