@@ -108,7 +108,7 @@ func FetchVideoWithVideoId(dbCtx *db.DbCtx, videoId string) (model.Video, error)
 	return video, nil
 }
 
-func InsertTrimHistory(tx *sql.Tx, ctx context.Context, originVideoId string, trimVideo model.TrimVideo) error {
+func InsertTrimHistory(tx *sql.Tx, ctx context.Context, trimedVideoId string, trimVideo model.TrimVideo) error {
 	query := `
 		INSERT INTO trim_history 
 		(
@@ -129,8 +129,8 @@ func InsertTrimHistory(tx *sql.Tx, ctx context.Context, originVideoId string, tr
 	_, err := tx.ExecContext(
 		ctx,
 		query,
+		trimedVideoId,
 		trimVideo.VideoId,
-		originVideoId,
 		trimVideo.StartTime,
 		trimVideo.EndTime,
 	)
@@ -196,16 +196,19 @@ func DeleteVideo(dbCtx *db.DbCtx, videoId string) error {
 func FetchVideoInfoList(dbCtx *db.DbCtx) ([]model.Video, error) {
 	query := `
 		SELECT 
-			uuid, 
-			path,
-			video_name, 
-			extension, 
-			upload_time,
-			is_trimed,
-			trim_time,
-			is_concated,
-			concat_time
-		FROM video
+			v.uuid, 
+			v.path,
+			v.video_name, 
+			v.extension, 
+			v.upload_time,
+			v.is_trimed,
+			v.trim_time,
+			v.is_concated,
+			v.concat_time,
+			v.is_encoded,
+			v.encode_time
+		FROM 
+			video v
 	`
 
 	stmt, err := dbCtx.CreatePrepareStmt(query)
@@ -237,6 +240,8 @@ func FetchVideoInfoList(dbCtx *db.DbCtx) ([]model.Video, error) {
 			&video.TrimTime,
 			&video.IsConcated,
 			&video.ConcatTime,
+			&video.IsEncoded,
+			&video.EncodeTime,
 		)
 		if err != nil {
 			log.Error().Msgf("failed to scan: %s", err.Error())
@@ -246,4 +251,76 @@ func FetchVideoInfoList(dbCtx *db.DbCtx) ([]model.Video, error) {
 	}
 
 	return videoList, nil
+}
+
+func FetchTrimInfo(dbCtx *db.DbCtx, originVideoId string) (model.TrimVideo, error) {
+	query := `
+		SELECT 
+			v.uuid,
+			v.path,
+			t.start_time,
+			t.end_time
+		FROM 
+			video v
+		JOIN 
+			trim_history t
+		ON
+			v.uuid = t.origin_video_uuid
+		WHERE
+			t.uuid = ?
+	`
+
+	stmt, err := dbCtx.CreatePrepareStmt(query)
+	if err != nil {
+		log.Error().Msgf("failed to create prepare statement: %s", err.Error())
+		return model.TrimVideo{}, err
+	}
+
+	defer stmt.Close()
+
+	var trimVideo model.TrimVideo
+	err = stmt.QueryRow(originVideoId).Scan(
+		&trimVideo.VideoId,
+		&trimVideo.VideoPath,
+		&trimVideo.StartTime,
+		&trimVideo.EndTime,
+	)
+
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return model.TrimVideo{}, nil
+		}
+		log.Error().Msgf("failed to scan: %s", err.Error())
+		return model.TrimVideo{}, err
+	}
+
+	return trimVideo, nil
+}
+
+func FetchConcatInfo(dbCtx *db.DbCtx, concatVideoId string) (string, error) {
+	query := `
+		SELECT 
+			concat_video_uuid_list
+		FROM 
+			concat_history
+		WHERE
+			uuid = ?
+	`
+
+	stmt, err := dbCtx.CreatePrepareStmt(query)
+	if err != nil {
+		log.Error().Msgf("failed to create prepare statement: %s", err.Error())
+		return "", err
+	}
+
+	defer stmt.Close()
+
+	var concatInfoPath string
+	err = stmt.QueryRow(concatVideoId).Scan(&concatInfoPath)
+	if err != nil {
+		log.Error().Msgf("failed to scan: %s", err.Error())
+		return "", err
+	}
+
+	return concatInfoPath, nil
 }

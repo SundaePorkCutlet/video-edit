@@ -97,7 +97,7 @@ func TrimVideo(ctx context.Context, trimVideoList []model.TrimVideo) ([]model.Tr
 			}
 
 			trimInfo := model.TrimVideo{
-				VideoId:   u,
+				VideoId:   video.Id,
 				StartTime: trimVideo.StartTime,
 				EndTime:   trimVideo.EndTime,
 			}
@@ -300,14 +300,46 @@ func GetVideoWithVideoId(videoId string) (model.Video, error) {
 	return video, nil
 }
 
-func GetVideoInfoList() ([]model.Video, error) {
+func GetVideoInfoList() ([]model.VideoInfo, error) {
 	dbCtx := db.GetDbConnection(context.Background())
+	videoInfo := []model.VideoInfo{}
+
 	videos, err := repo.FetchVideoInfoList(dbCtx)
 	if err != nil {
 		return nil, err
 	}
 
-	return videos, nil
+	for _, video := range videos {
+		var trimInfo model.TrimVideo
+		var concatInfo string
+		var err error
+
+		if video.IsTrimed {
+			trimInfo, err = repo.FetchTrimInfo(dbCtx, video.Id)
+			if err != nil {
+				return nil, err
+			}
+			log.Debug().Msgf("trimInfo: %v", trimInfo)
+		}
+		if video.IsConcated {
+			concatInfo, err = repo.FetchConcatInfo(dbCtx, video.Id)
+			if err != nil {
+				return nil, err
+			}
+		}
+
+		log.Debug().Msgf("video: %v, trimInfo: %v, concatInfo: %v", video, trimInfo, concatInfo)
+
+		tempVideoInfo := model.VideoInfo{
+			Video:          video,
+			TrimInfo:       trimInfo,
+			ConcatInfoPath: concatInfo,
+		}
+
+		videoInfo = append(videoInfo, tempVideoInfo)
+	}
+
+	return videoInfo, nil
 }
 
 func ConvertToMp4(tx *sql.Tx, ctx context.Context, inputFilePath string, originVideoId string) (string, error) {

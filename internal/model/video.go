@@ -23,6 +23,7 @@ type ModifyVideo struct {
 
 type TrimVideo struct {
 	VideoId   string `json:"videoId"`
+	VideoPath string `json:"videoPath"`
 	StartTime int    `json:"startTime"`
 	EndTime   int    `json:"endTime"`
 }
@@ -30,4 +31,10 @@ type TrimVideo struct {
 type TrimHistory struct {
 	Video    Video     `json:"videoList"`
 	TrimInfo TrimVideo `json:"trimInfo"`
+}
+
+type VideoInfo struct {
+	Video          Video     `json:"video"`
+	TrimInfo       TrimVideo `json:"trimInfo"`
+	ConcatInfoPath string    `json:"concatInfoPath"`
 }
