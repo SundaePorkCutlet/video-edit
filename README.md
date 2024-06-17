@@ -24,15 +24,17 @@
 
 
 # API Example
-### `:{port}/upload`  
+### POST
+### `/upload`  
 동영상 업로드  
 Multipart form 형식으로 업로드  
 
 **postman example**
   
 <img width="834" alt="image" src="https://github.com/SundaePorkCutlet/video-edit/assets/87690981/9ae267ef-1423-4a18-b6d2-a8f09df11319">
-
-### `:{port}/modify`
+  
+### POST  
+### `/modify`
 3가지 조건에 따라 parameter 변화  
 
 ### 1. trim만 요청하는 경우
@@ -87,4 +89,9 @@ endTime : 종료 시간 (초 단위)
     "isConcated":true
 }</code></pre>  
 
-trim과 똑같은 요청에서 isConcated만 true요청 추가
+trim과 똑같은 요청에서 isConcated만 true요청 추가  
+
+### GET
+### `/video`  
+비디오 관한 모든 정보요청
+
