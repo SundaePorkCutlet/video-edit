@@ -44,12 +44,15 @@ func UploadVideo(c *gin.Context) {
 	for _, file := range files {
 		wg.Add(1)
 
+		// 고루틴으로 파일 업로드 처리
 		go func(file *multipart.FileHeader) {
 			defer wg.Done()
 
+			// 파일 확장자 확인
 			splitFile := strings.Split(file.Filename, ".")
 
 			fileExtension := splitFile[len(splitFile)-1]
+			// 비디오 파일이 아닌 경우 처리
 			if !isVideoFile(fileExtension) {
 				log.Error().Msgf("not video file: %s", file.Filename)
 				results <- fmt.Errorf("not video file: %s", file.Filename)
@@ -171,6 +174,7 @@ func GetDownloadVideo(c *gin.Context) {
 	}
 
 	filePath := video.Path
+	// 파일 다운로드 , 파일명은 video.VideoName으로 설정
 	c.Header("Content-Disposition", "attachment; filename="+video.VideoName)
 	c.File(filePath)
 

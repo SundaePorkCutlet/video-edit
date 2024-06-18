@@ -51,6 +51,7 @@ func TrimVideo(ctx context.Context, trimVideoList []model.TrimVideo) ([]model.Tr
 	for _, trimVideo := range trimVideoList {
 		wg.Add(1)
 
+		// 고루틴으로 비디오 트림 처리
 		go func(trimVideo model.TrimVideo) {
 			defer wg.Done()
 			video, err := repo.FetchVideoWithVideoId(dbCtx, trimVideo.VideoId)
@@ -316,6 +317,7 @@ func GetVideoInfoList() ([]model.VideoInfo, error) {
 		var encodeInfo string
 		var err error
 
+		// 각 비디오 정보에 대한 trim, concat, encode 정보를 가져옴
 		if video.IsTrimed {
 			trimInfo, err = repo.FetchTrimInfo(dbCtx, video.Id)
 			if err != nil {
@@ -365,7 +367,7 @@ func ConvertToMp4(tx *sql.Tx, ctx context.Context, inputFilePath string, originV
 
 	video := model.Video{
 		Id:         u,
-		VideoName:  "cv-" + videoName[0] + ".mp4",
+		VideoName:  "ecd-" + videoName[0] + ".mp4",
 		Extension:  "mp4",
 		IsTrimed:   false,
 		IsConcated: false,
