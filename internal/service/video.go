@@ -10,6 +10,7 @@ import (
 	"stockfoilo_test/internal/db"
 	"stockfoilo_test/internal/model"
 	"stockfoilo_test/internal/utils"
+	"strings"
 	"sync"
 
 	"stockfoilo_test/internal/repo"
@@ -89,7 +90,7 @@ func TrimVideo(ctx context.Context, trimVideoList []model.TrimVideo) ([]model.Tr
 			// DB에 trim 정보 업데이트
 			trimmedVideo := model.Video{
 				Id:        u,
-				VideoName: "trim_" + video.VideoName,
+				VideoName: "tr-" + video.VideoName,
 				Extension: video.Extension,
 				IsTrimed:  true,
 				TrimTime:  utils.GetTime(),
@@ -173,7 +174,7 @@ func ConcatVideo(ctx context.Context, videos []model.Video, concatVideoList []st
 	// 확장자 통일을 위해 확장자가 mp4가 아닌 경우 mp4로 변환, 해상도도 통일
 	err := dbCtx.Transactional(func(dbCtx *db.DbCtx) error {
 		for _, video := range videos {
-			MP4path, err := ConvertToMp4(dbCtx.Tx, dbCtx.Ctx, video.Path, video.Id)
+			MP4path, err := ConvertToMp4(dbCtx.Tx, dbCtx.Ctx, video.Path, video.Id, video.VideoName)
 			if err != nil {
 				return err
 			}
@@ -223,13 +224,13 @@ func ConcatVideo(ctx context.Context, videos []model.Video, concatVideoList []st
 	for _, v := range inputFilePathsToMp4 {
 		args = append(args, "-i", v)
 	}
-	args = append(args, "-filter_complex", filterComplex, "-vf", "auto-orient", "-map", "[outv]", "-map", "[outa]", outputFilePath)
+	args = append(args, "-filter_complex", filterComplex, "-map", "[outv]", "-map", "[outa]", outputFilePath)
 
 	cmd := exec.Command("ffmpeg", args...)
-	err = cmd.Run()
+	output, err := cmd.CombinedOutput()
 
 	if err != nil {
-		log.Error().Msgf("failed to concat video: %s", err.Error())
+		log.Error().Msgf("failed to concat video: %s, %s", err.Error(), output)
 		for _, outputFilePath := range inputFilePathsToMp4 {
 			log.Debug().Msgf("remove video: %s", outputFilePath)
 			err := removeVideo(outputFilePath)
@@ -239,12 +240,12 @@ func ConcatVideo(ctx context.Context, videos []model.Video, concatVideoList []st
 		}
 		os.Remove(inputFileList)
 
-		return nil
+		return err
 	}
 
 	concatVideo := model.Video{
 		Id:         u,
-		VideoName:  "concat_" + utils.GetTime() + "." + "mp4",
+		VideoName:  "cc-" + utils.GetTime() + "." + "mp4",
 		Extension:  "mp4",
 		IsConcated: true,
 		ConcatTime: utils.GetTime(),
@@ -347,22 +348,24 @@ func GetVideoInfoList() ([]model.VideoInfo, error) {
 	return videoInfo, nil
 }
 
-func ConvertToMp4(tx *sql.Tx, ctx context.Context, inputFilePath string, originVideoId string) (string, error) {
+func ConvertToMp4(tx *sql.Tx, ctx context.Context, inputFilePath string, originVideoId string, originVideoName string) (string, error) {
 	config := config.GetConfig()
 	u := uuid.New().String()
 
 	outputFilePath := fmt.Sprintf("%s/%s.mp4", config.FileConfig.VideoPath, u)
 	// 비디오 코덱이랑 해상도 맞춰주기....
-	cmd := exec.Command("ffmpeg", "-i", inputFilePath, "-c:a", "copy", "-c:v", "libx264", "-filter:v", "scale=1920:1080", "-threads", "4", outputFilePath)
+	cmd := exec.Command("ffmpeg", "-i", inputFilePath, "-c:a", "copy", "-c:v", "libx264", "-filter:v", "scale=-1:1080", "-threads", "4", outputFilePath)
 	output, err := cmd.CombinedOutput()
 	if err != nil {
 		log.Error().Msgf("failed to convert video: %s, %s", err.Error(), output)
 		return "", err
 	}
 
+	videoName := strings.Split(originVideoName, ".")
+
 	video := model.Video{
 		Id:         u,
-		VideoName:  "convert_" + originVideoId + ".mp4",
+		VideoName:  "cv-" + videoName[0] + ".mp4",
 		Extension:  "mp4",
 		IsTrimed:   false,
 		IsConcated: false,
