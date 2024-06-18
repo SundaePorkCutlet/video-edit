@@ -110,7 +110,9 @@ DB의 concat_history 테이블에는 생성된 동영상 UUID와 인코딩된 �
   
 ### GET
 ### `/video`  
-비디오 관한 모든 정보요청  
+동영상 모든 정보를 제공합니다  
+
+
 
 
 #### result example
@@ -138,7 +140,41 @@ DB의 concat_history 테이블에는 생성된 동영상 UUID와 인코딩된 �
         "concatInfoPath": "",
         "encodeInfoPath": ""
     },
-]</code></pre>
+]</code></pre>  
+
+### GET
+### `/download/:uuid`  
+동영상 다운로드 제공 안내
+
+동영상 파일을 다운로드할 때의 파일 이름 지정 방식은 다음과 같습니다:
+
+1. **원본 동영상**: 원본 동영상의 이름으로 제공됩니다.
+2. **Trim된 파일**: `tr-{원본동영상이름}.{원본확장자}` 형식으로 제공됩니다.
+3. **인코딩된 파일**:
+   - **Concat 파일**: 인코딩된 파일은 `cv-{원본동영상이름}.mp4` 형식으로 제공됩니다.
+   - **Trim된 파일을 인코딩한 경우**: `cv-tr-{원본동영상이름}.mp4` 형식으로 제공됩니다.
+4. **Concat된 파일**: `cc-{concat 요청시간}.mp4` 형식으로 제공됩니다.
+5. **Trim과 Concat을 모두 요청한 파일**: Concat 파일 형식(`cc-{concat 요청시간}.mp4`)으로 제공됩니다.
+  
+
+### example  
+#### Trim과 인코딩된 동영상 다운로드 요청 시
+
+- **파일 이름**: `cv-tr-{원본동영상이름}.mp4`
+
+  
+<img width="648" alt="image" src="https://github.com/SundaePorkCutlet/video-edit/assets/87690981/1eac4062-6325-4db7-bb3c-25c211823a58">    
+
+<img width="330" alt="image" src="https://github.com/SundaePorkCutlet/video-edit/assets/87690981/31c41461-f086-4628-868a-1d5cbdd599c9">    
+
+#### Concat된 동영상 다운로드 요청 시
+
+- **파일 이름**: `cc-{concat 요청시간}.mp4`
+  
+<img width="338" alt="image" src="https://github.com/SundaePorkCutlet/video-edit/assets/87690981/de3e8927-84e0-4321-a79d-e88a4af50dc3">  
+
+
+
 
 ## ISSUE
 동영상을 Concat 하기 위해 해상도, 확장자, 코덱을 통일해야 했기 때문에 Concat하기 전 모든 동영상을 인코딩합니다.  
