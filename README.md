@@ -150,27 +150,28 @@ DB의 concat_history 테이블에는 생성된 동영상 UUID와 인코딩된 �
     },
 ]</code></pre>  
 
-### video  
-**id** : 동영상 uuid  
-**path** : 동영상 url  
-**videoName** : 동영상 이름  
-**extension** : 동영상 확장자  
-**uploadTime** : 유저 업로드 동영상일 경우 업로드 시간  
-**isTrimed** : trim된 동영상일 경우 true  
-**trimTime** : trim된 동영상일 경우 trim 요청 시간  
-**isConcated** : concat된 동영상일 경우 true  
-**concatTime** : concat된 동영상일 경우 concat 요청 시간
-**isEncoded** : 인코딩된 동영상일 경우 true
-**encodeTime** : 인코딩된 동영상일 경우 인코딩된 시간  
+### video (동영상)
+- **id** : 동영상의 고유 ID (UUID)  
+- **path** : 동영상 파일의 URL 경로  
+- **videoName** : 동영상의 이름  
+- **extension** : 동영상 파일의 확장자  
+- **uploadTime** : 사용자가 업로드한 동영상의 업로드 시간  
+- **isTrimed**: 동영상이 trim된 경우 true
+- **trimTime**: 동영상이 trim된 경우 트림 요청 시간
+- **isConcated**: 동영상이 concat된 경우 true
+- **concatTime**: 동영상이 concat된 경우 결합 요청 시간
+- **isEncoded**: 동영상이 인코딩된 경우 true
+- **encodeTime**: 동영상이 인코딩된 경우 인코딩된 시간
 
-### trimInfo  
-**videoId** : 원본 동영상 uuid  
-**videoPath** : 원본 동영상 url  
-**startTime** : trim 요청한 시작 시간  
-**endTime** : trim 요청한 종료 시간  
+## trimInfo (트림정보)
+- **videoId**: 원본 동영상의 고유 ID (UUID)
+- **videoPath**: 원본 동영상의 URL 경로
+- **startTime**: trim 요청한 시작 시간
+- **endTime**: trim 요청한 종료 시간
 
-**concatInfoPath** : concat된 동영상일 경우 concat 요청한 동영상 리스트 txt파일 url  
-**encodeInfoPath** : 인코딩된 동영상일 경우 인코딩 요청한 원본 동영상 url  
+## 추가 정보
+- **concatInfoPath**: 동영상이 concat된 경우, concat 요청한 동영상 리스트의 텍스트 파일 URL 경로
+- **encodeInfoPath**: 동영상이 인코딩된 경우, 인코딩 요청한 원본 동영상의 URL 경로
   
 ### GET
 ### `/download/:uuid`  
