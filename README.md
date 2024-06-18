@@ -22,6 +22,14 @@
     "code": 6002
 }</code></pre>
 
+
+# Requirements
+- ***make***: [Installation Guide](https://www.gnu.org/software/make/)
+- ***go 1.22***: [Installation Guide](https://golang.org/doc/install)
+- ***MariaDB 11.2.2***: [Installation Guide](https://mariadb.org/download/)
+
+
+
 # Script
 ### `make run`  
 9000번 포트로 프로젝트를 실행시킵니다.  
