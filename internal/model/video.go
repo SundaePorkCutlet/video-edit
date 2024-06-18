@@ -37,4 +37,5 @@ type VideoInfo struct {
 	Video          Video     `json:"video"`
 	TrimInfo       TrimVideo `json:"trimInfo"`
 	ConcatInfoPath string    `json:"concatInfoPath"`
+	EncodeInfoPath string    `json:"encodeInfoPath"`
 }

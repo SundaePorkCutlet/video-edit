@@ -7,7 +7,7 @@ const (
 )
 
 const (
-	Success               = 0
+	Success               = 200
 	TrimSuccess           = 1001
 	ConcatSuccess         = 1002
 	TrimSuccessConcatFail = 1003

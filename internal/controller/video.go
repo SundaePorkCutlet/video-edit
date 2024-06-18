@@ -157,6 +157,25 @@ func GetVideoInfoList(c *gin.Context) {
 	ResponseWithData(c, videos)
 }
 
+func GetDownloadVideo(c *gin.Context) {
+	ctx := c.Request.Context()
+
+	videoId := c.Param("uuid")
+
+	log.Debug().Msgf("videoId: %s", videoId)
+
+	video, err := service.GetVideoWithVideoId(ctx, videoId)
+	if err != nil {
+		ResponseFailure(c, http.StatusInternalServerError)
+		return
+	}
+
+	filePath := video.Path
+	c.Header("Content-Disposition", "attachment; filename="+video.VideoName)
+	c.File(filePath)
+
+}
+
 func isVideoFile(filename string) bool {
 	videoExtensions := []string{"mp4", "avi", "mov", "mkv", "flv", "wmv"}
 	for _, ext := range videoExtensions {
@@ -195,7 +214,7 @@ func concatVideo(c *gin.Context, concatVideoIdList []string) error {
 	var videos []model.Video
 
 	for _, concatVideoId := range concatVideoIdList {
-		video, err := service.GetVideoWithVideoId(concatVideoId)
+		video, err := service.GetVideoWithVideoId(ctx, concatVideoId)
 		if err != nil {
 			return err
 		}

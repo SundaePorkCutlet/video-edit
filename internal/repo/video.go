@@ -173,6 +173,35 @@ func InsertConcatHistory(tx *sql.Tx, ctx context.Context, concatVideoId string, 
 
 }
 
+func InsertEncodeHistory(tx *sql.Tx, ctx context.Context, encodeVideoId string, originVideoId string) error {
+	query := `
+		INSERT INTO encode_history 
+		(
+			uuid, 
+			origin_video_uuid
+		)
+		VALUES
+		(
+			?,
+			?
+		)
+		`
+
+	_, err := tx.ExecContext(
+		ctx,
+		query,
+		encodeVideoId,
+		originVideoId,
+	)
+
+	if err != nil {
+		log.Error().Msgf("failed to insert encode history: %s", err.Error())
+		return err
+	}
+
+	return nil
+}
+
 func DeleteVideo(dbCtx *db.DbCtx, videoId string) error {
 	query := `
 		DELETE FROM video
@@ -323,4 +352,35 @@ func FetchConcatInfo(dbCtx *db.DbCtx, concatVideoId string) (string, error) {
 	}
 
 	return concatInfoPath, nil
+}
+
+func FetchEncodeInfo(dbCtx *db.DbCtx, encodeVideoId string) (string, error) {
+	query := `
+		SELECT 
+			origin_video_uuid
+		FROM 
+			encode_history
+		WHERE
+			uuid = ?
+	`
+
+	stmt, err := dbCtx.CreatePrepareStmt(query)
+	if err != nil {
+		log.Error().Msgf("failed to create prepare statement: %s", err.Error())
+		return "", err
+	}
+
+	defer stmt.Close()
+
+	var encodeInfoPath string
+	err = stmt.QueryRow(encodeVideoId).Scan(&encodeInfoPath)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return "", nil
+		}
+		log.Error().Msgf("failed to scan: %s", err.Error())
+		return "", err
+	}
+
+	return encodeInfoPath, nil
 }

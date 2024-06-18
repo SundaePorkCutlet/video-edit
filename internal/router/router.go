@@ -18,4 +18,5 @@ func InitRoute(router *gin.Engine) {
 	router.POST("/upload", controller.UploadVideo)
 	router.POST("/modify", controller.ModifyVideo)
 	router.GET("/video", controller.GetVideoInfoList)
+	router.GET("/download/:uuid", controller.GetDownloadVideo)
 }

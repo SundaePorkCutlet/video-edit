@@ -77,9 +77,9 @@ func TrimVideo(ctx context.Context, trimVideoList []model.TrimVideo) ([]model.Tr
 			)
 
 			// 구성된 명령어 실행
-			err = cmd.Run()
+			output, err := cmd.CombinedOutput()
 			if err != nil {
-				log.Error().Msgf("failed to trim video: %s", err.Error())
+				log.Error().Msgf("failed to trim video: %s , %s", err.Error(), output)
 				results <- err
 				return
 			}
@@ -223,7 +223,7 @@ func ConcatVideo(ctx context.Context, videos []model.Video, concatVideoList []st
 	for _, v := range inputFilePathsToMp4 {
 		args = append(args, "-i", v)
 	}
-	args = append(args, "-filter_complex", filterComplex, "-map", "[outv]", "-map", "[outa]", outputFilePath)
+	args = append(args, "-filter_complex", filterComplex, "-vf", "auto-orient", "-map", "[outv]", "-map", "[outa]", outputFilePath)
 
 	cmd := exec.Command("ffmpeg", args...)
 	err = cmd.Run()
@@ -290,8 +290,8 @@ func ConcatVideo(ctx context.Context, videos []model.Video, concatVideoList []st
 
 }
 
-func GetVideoWithVideoId(videoId string) (model.Video, error) {
-	dbCtx := db.GetDbConnection(context.Background())
+func GetVideoWithVideoId(ctx context.Context, videoId string) (model.Video, error) {
+	dbCtx := db.GetDbConnection(ctx)
 	video, err := repo.FetchVideoWithVideoId(dbCtx, videoId)
 	if err != nil {
 		return model.Video{}, err
@@ -312,6 +312,7 @@ func GetVideoInfoList() ([]model.VideoInfo, error) {
 	for _, video := range videos {
 		var trimInfo model.TrimVideo
 		var concatInfo string
+		var encodeInfo string
 		var err error
 
 		if video.IsTrimed {
@@ -319,7 +320,6 @@ func GetVideoInfoList() ([]model.VideoInfo, error) {
 			if err != nil {
 				return nil, err
 			}
-			log.Debug().Msgf("trimInfo: %v", trimInfo)
 		}
 		if video.IsConcated {
 			concatInfo, err = repo.FetchConcatInfo(dbCtx, video.Id)
@@ -327,13 +327,18 @@ func GetVideoInfoList() ([]model.VideoInfo, error) {
 				return nil, err
 			}
 		}
-
-		log.Debug().Msgf("video: %v, trimInfo: %v, concatInfo: %v", video, trimInfo, concatInfo)
+		if video.IsEncoded {
+			encodeInfo, err = repo.FetchEncodeInfo(dbCtx, video.Id)
+			if err != nil {
+				return nil, err
+			}
+		}
 
 		tempVideoInfo := model.VideoInfo{
 			Video:          video,
 			TrimInfo:       trimInfo,
 			ConcatInfoPath: concatInfo,
+			EncodeInfoPath: encodeInfo,
 		}
 
 		videoInfo = append(videoInfo, tempVideoInfo)
@@ -348,10 +353,10 @@ func ConvertToMp4(tx *sql.Tx, ctx context.Context, inputFilePath string, originV
 
 	outputFilePath := fmt.Sprintf("%s/%s.mp4", config.FileConfig.VideoPath, u)
 	// 비디오 코덱이랑 해상도 맞춰주기....
-	cmd := exec.Command("ffmpeg", "-i", inputFilePath, "-c:a", "copy", "-c:v", "libx264", "-filter:v", "scale=1080:1920", "-threads", "4", outputFilePath)
-	err := cmd.Run()
+	cmd := exec.Command("ffmpeg", "-i", inputFilePath, "-c:a", "copy", "-c:v", "libx264", "-filter:v", "scale=1920:1080", "-threads", "4", outputFilePath)
+	output, err := cmd.CombinedOutput()
 	if err != nil {
-		log.Error().Msgf("failed to convert video: %s", err.Error())
+		log.Error().Msgf("failed to convert video: %s, %s", err.Error(), output)
 		return "", err
 	}
 
@@ -368,9 +373,11 @@ func ConvertToMp4(tx *sql.Tx, ctx context.Context, inputFilePath string, originV
 
 	err = repo.InsertVideo(tx, ctx, video)
 	if err != nil {
-		if err != nil {
-			return "", err
-		}
+		return "", err
+	}
+
+	err = repo.InsertEncodeHistory(tx, ctx, u, originVideoId)
+	if err != nil {
 		return "", err
 	}
 

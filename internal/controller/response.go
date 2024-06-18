@@ -7,12 +7,12 @@ import (
 )
 
 const (
-	Success = 0
+	Success = 200
 )
 
 func ResponseSuccess(ginCtx *gin.Context) {
 	ginCtx.JSON(http.StatusOK, gin.H{
-		"code": 0,
+		"code": 200,
 	})
 }
 
