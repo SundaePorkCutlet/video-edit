@@ -196,7 +196,8 @@ DB의 concat_history 테이블에는 생성된 동영상 UUID와 인코딩된 �
   
 <img width="648" alt="image" src="https://github.com/SundaePorkCutlet/video-edit/assets/87690981/1eac4062-6325-4db7-bb3c-25c211823a58">    
 
-<img width="330" alt="image" src="https://github.com/SundaePorkCutlet/video-edit/assets/87690981/31c41461-f086-4628-868a-1d5cbdd599c9">    
+<img width="317" alt="image" src="https://github.com/SundaePorkCutlet/video-edit/assets/87690981/69bffd86-1a89-4d7d-b74a-51c88aa7ed56">
+   
 
 #### Concat된 동영상 다운로드 요청 시
 
