@@ -150,6 +150,28 @@ DB의 concat_history 테이블에는 생성된 동영상 UUID와 인코딩된 �
     },
 ]</code></pre>  
 
+### video  
+**id** : 동영상 uuid  
+**path** : 동영상 url  
+**videoName** : 동영상 이름  
+**extension** : 동영상 확장자  
+**uploadTime** : 유저 업로드 동영상일 경우 업로드 시간  
+**isTrimed** : trim된 동영상일 경우 true  
+**trimTime** : trim된 동영상일 경우 trim 요청 시간  
+**isConcated** : concat된 동영상일 경우 true  
+**concatTime** : concat된 동영상일 경우 concat 요청 시간
+**isEncoded** : 인코딩된 동영상일 경우 true
+**encodeTime** : 인코딩된 동영상일 경우 인코딩된 시간  
+
+### trimInfo  
+**videoId** : 원본 동영상 uuid  
+**videoPath** : 원본 동영상 url  
+**startTime** : trim 요청한 시작 시간  
+**endTime** : trim 요청한 종료 시간  
+
+**concatInfoPath** : concat된 동영상일 경우 concat 요청한 동영상 리스트 txt파일 url  
+**encodeInfoPath** : 인코딩된 동영상일 경우 인코딩 요청한 원본 동영상 url  
+  
 ### GET
 ### `/download/:uuid`  
 동영상 다운로드 제공 안내
@@ -159,8 +181,8 @@ DB의 concat_history 테이블에는 생성된 동영상 UUID와 인코딩된 �
 1. **원본 동영상**: 원본 동영상의 이름으로 제공됩니다.
 2. **Trim된 파일**: `tr-{원본동영상이름}.{원본확장자}` 형식으로 제공됩니다.
 3. **인코딩된 파일**:
-   - **Concat 파일**: 인코딩된 파일은 `cv-{원본동영상이름}.mp4` 형식으로 제공됩니다.
-   - **Trim된 파일을 인코딩한 경우**: `cv-tr-{원본동영상이름}.mp4` 형식으로 제공됩니다.
+   - **Concat 파일**: 인코딩된 파일은 `ecd-{원본동영상이름}.mp4` 형식으로 제공됩니다.
+   - **Trim된 파일을 인코딩한 경우**: `ecd-tr-{원본동영상이름}.mp4` 형식으로 제공됩니다.
 4. **Concat된 파일**: `cc-{concat 요청시간}.mp4` 형식으로 제공됩니다.
 5. **Trim과 Concat을 모두 요청한 파일**: Concat 파일 형식(`cc-{concat 요청시간}.mp4`)으로 제공됩니다.
   
@@ -168,7 +190,7 @@ DB의 concat_history 테이블에는 생성된 동영상 UUID와 인코딩된 �
 ### example  
 #### Trim과 인코딩된 동영상 다운로드 요청 시
 
-- **파일 이름**: `cv-tr-{원본동영상이름}.mp4`
+- **파일 이름**: `ecd-tr-{원본동영상이름}.mp4`
 
   
 <img width="648" alt="image" src="https://github.com/SundaePorkCutlet/video-edit/assets/87690981/1eac4062-6325-4db7-bb3c-25c211823a58">    
